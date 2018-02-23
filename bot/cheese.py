@@ -68,7 +68,7 @@ class CheeseBot(sc2.BotAI):
     async def build_ghost_academy(self):
         cc = self.get_command_center()
         if self.can_afford(UnitTypeId.GHOSTACADEMY) and self.units(UnitTypeId.BARRACKS).ready.amount > 0:
-            await self.build(UnitTypeId.GHOSTACADEMY, near=cc.position.towards(self.game_info.map_center, 5))
+            await self.build(UnitTypeId.GHOSTACADEMY, near=cc.position.towards_with_random_angle(self.game_info.map_center, 10))
             return True
 
     async def build_orbital_command(self):
@@ -86,7 +86,7 @@ class CheeseBot(sc2.BotAI):
     async def build_factory(self):
         cc = self.get_command_center()
         if self.can_afford(UnitTypeId.FACTORY) and self.units(UnitTypeId.BARRACKS).ready.amount > 0:
-            await self.build(UnitTypeId.FACTORY, near=cc.position.towards(self.game_info.map_center, 5))
+            await self.build(UnitTypeId.FACTORY, near=cc.position.towards_with_random_angle(self.game_info.map_center, 10))
             return True
 
     async def build_factory_reactor(self):
@@ -96,23 +96,29 @@ class CheeseBot(sc2.BotAI):
             return True
 
     async def build_cyclone(self):
-        factories = self.units(UnitTypeId.FACTORY).ready
-        if self.can_afford(UnitTypeId.CYCLONE) and factories.amount > 0:
-            await self.do(factories[0].train(UnitTypeId.CYCLONE))
+        if self.can_afford(UnitTypeId.CYCLONE) and self.units(UnitTypeId.FACTORYREACTOR).ready.amount > 0:
+            await self.do(self.units(UnitTypeId.FACTORY)[0].train(UnitTypeId.CYCLONE))
             return True
 
     async def attaaaaack(self):
-        for unit in self.units(UnitTypeId.GHOST):
-            await self.do(unit(AbilityId.BEHAVIOR_CLOAKON_GHOST))
-        self.is_attacking = True
-        return
+        if (self.units(UnitTypeId.CYCLONE).ready.amount == 2):
+            self.is_attacking = True
+            return True
 
     async def on_step(self, iteration):
         if iteration == 0:
             await self.chat_send(f"Name: {self.NAME}")
         cc = self.get_command_center()
+
         if not cc or self.is_attacking:
-            target = self.known_enemy_structures.random_or(self.enemy_start_locations[0]).position
+            visible_enemy_units = self.known_enemy_units.filter(lambda unit: unit.is_visible)
+            if visible_enemy_units.amount > 0:
+                for unit in self.units(UnitTypeId.GHOST) and not unit.cloak:
+                    await self.do(unit(AbilityId.BEHAVIOR_CLOAKON_GHOST))
+            race_workers = [UnitTypeId.PROBE, UnitTypeId.SCV, UnitTypeId.DRONE]
+            workers = visible_enemy_units.filter(lambda unit: unit.type_id in race_workers)
+            not_workers = visible_enemy_units.filter(lambda unit: unit.type_id not in race_workers)
+            target = not_workers.random_or(workers.random_or(self.known_enemy_structures.random_or(self.enemy_start_locations[0])))
             for unit in self.workers | self.units(UnitTypeId.GHOST) | self.units(UnitTypeId.CYCLONE):
                 await self.do(unit.attack(target))
             return
@@ -134,13 +140,13 @@ class CheeseBot(sc2.BotAI):
     async def build_depot(self):
         cc = self.get_command_center()
         if self.can_afford(UnitTypeId.SUPPLYDEPOT):
-            await self.build(UnitTypeId.SUPPLYDEPOT, near=cc.position.towards(self.game_info.map_center, 5))
+            await self.build(UnitTypeId.SUPPLYDEPOT, near=cc.position.towards_with_random_angle(self.game_info.map_center, 10))
             return True
 
     async def build_barracks(self):
         cc = self.get_command_center()
         if self.can_afford(UnitTypeId.BARRACKS) and self.units(UnitTypeId.SUPPLYDEPOT).ready.amount > 0:
-            await self.build(UnitTypeId.BARRACKS, near=cc.position.towards(self.game_info.map_center, 5))
+            await self.build(UnitTypeId.BARRACKS, near=cc.position.towards_with_random_angle(self.game_info.map_center, 10))
             return True
 
     async def build_workers(self):

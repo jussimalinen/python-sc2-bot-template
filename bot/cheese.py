@@ -29,10 +29,11 @@ class CheeseBot(sc2.BotAI):
             [27, self.attaaaaack],
             [999, self.build_depot]
         ]
+        self.refineries = [];
 
     async def build_refinery(self):
         cc = self.units(UnitTypeId.COMMANDCENTER)[0]
-        if self.can_afford(UnitTypeId.REFINERY) and self.units(UnitTypeId.REFINERY).not_ready.amount == 0:
+        if self.can_afford(UnitTypeId.REFINERY):
             vgs = self.state.vespene_geyser.closer_than(20.0, cc)
             for vg in vgs:
                 if self.units(UnitTypeId.REFINERY).closer_than(1.0, vg).exists:
@@ -40,6 +41,11 @@ class CheeseBot(sc2.BotAI):
                 worker = self.select_build_worker(vg.position)
                 if worker is None:
                     break
+                if vg.tag in self.refineries:
+                    break
+                if vg.name != 'VespeneGeyser':
+                    break
+                self.refineries.append(vg.tag)
                 await self.do(worker.build(UnitTypeId.REFINERY, vg))
                 return True
 

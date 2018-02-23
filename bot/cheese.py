@@ -216,7 +216,7 @@ class CheeseBot(sc2.BotAI):
                 for unit in self.units(unit_type):
                     await self.do(unit.attack(self.enemy_start_locations[0]))
                 for ghost in self.units(UnitTypeId.GHOST):
-                    await self.do(ghost(AbilityId.BEHAVIOR_CLOAKON))
+                    await self.do(ghost(AbilityId.BEHAVIOR_CLOAKON_GHOST))
             return True
 
     async def on_step(self, iteration):

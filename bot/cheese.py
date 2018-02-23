@@ -8,7 +8,7 @@ from sc2.constants import *
 BARRACK_DISTANCE = 6
 FACTORY_DISTANCE = 11
 GHOST_DISTANCE = 5
-SUPPLY_DISTANCE = 3
+SUPPLY_DISTANCE = 15
 
 class CheeseBot(sc2.BotAI):
     with open(Path(__file__).parent / "../botinfo.json") as f:
@@ -77,7 +77,7 @@ class CheeseBot(sc2.BotAI):
     async def build_ghost_academy(self):
         cc = self.get_command_center()
         if self.can_afford(UnitTypeId.GHOSTACADEMY) and self.units(UnitTypeId.BARRACKS).ready.amount > 0:
-            await self.build(UnitTypeId.GHOSTACADEMY, near=cc.position.random_on_distance(GHOST_DISTANCE))
+            await self.build(UnitTypeId.GHOSTACADEMY, near=cc.position.towards(self.game_info.map_center, GHOST_DISTANCE))
             return True
 
     async def build_orbital_command(self):

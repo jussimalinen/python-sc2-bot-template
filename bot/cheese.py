@@ -91,7 +91,7 @@ class CheeseBot(sc2.BotAI):
     async def build_factory(self):
         cc = self.get_command_center()
         if self.can_afford(UnitTypeId.FACTORY) and self.units(UnitTypeId.BARRACKS).ready.amount > 0:
-            await self.build(UnitTypeId.FACTORY, near=cc.position.towards(self.game_info.map_center, 9))
+            await self.build(UnitTypeId.FACTORY, near=cc.position.towards(self.game_info.map_center, 11))
             return True
 
     async def build_factory_reactor(self):

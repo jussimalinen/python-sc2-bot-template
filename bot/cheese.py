@@ -4,7 +4,7 @@ from pathlib import Path
 import sc2
 from sc2.constants import *
 
-class MyBot(sc2.BotAI):
+class CheeseBot(sc2.BotAI):
     with open(Path(__file__).parent / "../botinfo.json") as f:
         NAME = json.load(f)["name"]
 

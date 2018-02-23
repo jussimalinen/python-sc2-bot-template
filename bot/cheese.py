@@ -63,11 +63,11 @@ class CheeseBot(sc2.BotAI):
         worker_count = self.workers.amount
         next_step_count = self.STEPS[0][0]
         if worker_count >= next_step_count:
-            executed = self.STEPS[0][1]()
+            executed = await self.STEPS[0][1]()
             if executed:
                 print("EXECUTED STEP {} {}".format(next_step_count, self.STEPS[0][1].__name__))
                 self.STEPS.pop(0)
-                await executed
+                return executed
         else:
             await self.build_workers()
 
@@ -75,15 +75,18 @@ class CheeseBot(sc2.BotAI):
         cc = self.units(UnitTypeId.COMMANDCENTER)
         if self.can_afford(UnitTypeId.SUPPLYDEPOT):
             await self.build(UnitTypeId.SUPPLYDEPOT, near=cc[-1].position.towards(self.game_info.map_center, 5))
+            return True
 
     async def build_barracks(self):
         cc = self.units(UnitTypeId.COMMANDCENTER)
-        if self.can_afford(UnitTypeId.BARRACKS):
+        if self.can_afford(UnitTypeId.BARRACKS) and self.units(UnitTypeId.SUPPLYDEPOT).ready.amount > 0:
             await self.build(UnitTypeId.BARRACKS, near=cc[-1].position.towards(self.game_info.map_center, 5))
+            return True
 
     async def build_workers(self):
         for cc in self.units(UnitTypeId.COMMANDCENTER).ready.noqueue:
             if self.can_afford(UnitTypeId.SCV):
                 print("Building worker, current count {}".format(self.workers.amount))
                 await self.do(cc.train(UnitTypeId.SCV))
+                return True
 

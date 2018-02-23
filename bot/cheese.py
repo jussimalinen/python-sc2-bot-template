@@ -5,7 +5,10 @@ import sc2
 from sc2.constants import *
 
 
-
+BARRACK_DISTANCE = 6
+FACTORY_DISTANCE = 11
+GHOST_DISTANCE = 5
+SUPPLY_DISTANCE = 3
 
 class CheeseBot(sc2.BotAI):
     with open(Path(__file__).parent / "../botinfo.json") as f:
@@ -74,7 +77,7 @@ class CheeseBot(sc2.BotAI):
     async def build_ghost_academy(self):
         cc = self.get_command_center()
         if self.can_afford(UnitTypeId.GHOSTACADEMY) and self.units(UnitTypeId.BARRACKS).ready.amount > 0:
-            await self.build(UnitTypeId.GHOSTACADEMY, near=cc.position.random_on_distance(5))
+            await self.build(UnitTypeId.GHOSTACADEMY, near=cc.position.random_on_distance(GHOST_DISTANCE))
             return True
 
     async def build_orbital_command(self):
@@ -92,7 +95,7 @@ class CheeseBot(sc2.BotAI):
     async def build_factory(self):
         cc = self.get_command_center()
         if self.can_afford(UnitTypeId.FACTORY) and self.units(UnitTypeId.BARRACKS).ready.amount > 0:
-            await self.build(UnitTypeId.FACTORY, near=cc.position.towards(self.game_info.map_center, 11))
+            await self.build(UnitTypeId.FACTORY, near=cc.position.towards(self.game_info.map_center, FACTORY_DISTANCE))
             return True
 
     async def build_factory_reactor(self):
@@ -157,13 +160,13 @@ class CheeseBot(sc2.BotAI):
     async def build_depot(self):
         cc = self.get_command_center()
         if self.can_afford(UnitTypeId.SUPPLYDEPOT):
-            await self.build(UnitTypeId.SUPPLYDEPOT, near=cc.position.random_on_distance(3))
+            await self.build(UnitTypeId.SUPPLYDEPOT, near=cc.position.random_on_distance(SUPPLY_DISTANCE))
             return True
 
     async def build_barracks(self):
         cc = self.get_command_center()
         if self.can_afford(UnitTypeId.BARRACKS) and self.units(UnitTypeId.SUPPLYDEPOT).ready.amount > 0:
-            await self.build(UnitTypeId.BARRACKS, near=cc.position.towards(self.game_info.map_center, 6))
+            await self.build(UnitTypeId.BARRACKS, near=cc.position.towards(self.game_info.map_center, BARRACK_DISTANCE))
             return True
 
     async def build_workers(self):

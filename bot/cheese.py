@@ -31,10 +31,25 @@ class CheeseBot(sc2.BotAI):
         ]
 
     async def build_refinery(self):
-        return
+        cc = self.units(UnitTypeId.COMMANDCENTER)[0]
+        if self.can_afford(UnitTypeId.REFINERY) and self.units(UnitTypeId.REFINERY).not_ready.amount == 0:
+            vgs = self.state.vespene_geyser.closer_than(20.0, cc)
+            for vg in vgs:
+                if self.units(UnitTypeId.REFINERY).closer_than(1.0, vg).exists:
+                    break
+                worker = self.select_build_worker(vg.position)
+                if worker is None:
+                    break
+                await self.do(worker.build(UnitTypeId.REFINERY, vg))
+                return True
+
 
     async def build_barracks_tech_lab(self):
-        return
+        ready_raxes = self.units(UnitTypeId.BARRACKS).ready
+        if ready_raxes.amount > 0 and self.can_afford(UnitTypeId.BARRACKSTECHLAB):
+            await self.do(ready_raxes[0].train(UnitTypeId.BARRACKSTECHLAB))
+            return True
+
 
     async def build_ghost_academy(self):
         return

@@ -123,7 +123,7 @@ class CheeseBot(sc2.BotAI):
         cc = self.get_command_center()
 
         if not cc or self.is_attacking:
-            target = self.known_enemy_structures.random_or(self.enemy_start_locations[0]).position
+            target = self.enemy_start_locations[0]
             for unit in self.workers | self.units(UnitTypeId.GHOST) | self.units(UnitTypeId.CYCLONE):
                 await self.do(unit.attack(target))
             return

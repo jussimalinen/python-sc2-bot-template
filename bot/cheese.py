@@ -31,6 +31,7 @@ class CheeseBot(sc2.BotAI):
             [26, self.build_depot],
             [27, self.build_cyclone],
             [27, self.build_cyclone],
+            [27, self.build_cyclone],
             [27, self.attaaaaack],
             [999, self.build_depot]
         ]

@@ -91,7 +91,7 @@ class CheeseBot(sc2.BotAI):
     async def build_factory(self):
         cc = self.get_command_center()
         if self.can_afford(UnitTypeId.FACTORY) and self.units(UnitTypeId.BARRACKS).ready.amount > 0:
-            await self.build(UnitTypeId.FACTORY, near=cc.position.towards(self.game_info.map_center, 7))
+            await self.build(UnitTypeId.FACTORY, near=cc.position.towards(self.game_info.map_center, 9))
             return True
 
     async def build_factory_reactor(self):
@@ -109,6 +109,8 @@ class CheeseBot(sc2.BotAI):
 
     async def attaaaaack(self):
         if (self.units(UnitTypeId.CYCLONE).ready.amount == 2):
+            for unit in self.units(UnitTypeId.GHOST):
+                await self.do(unit(AbilityId.BEHAVIOR_CLOAKON_GHOST))
             self.is_attacking = True
             #for unit in self.workers | self.units(UnitTypeId.GHOST) | self.units(UnitTypeId.CYCLONE):
             #    await self.do(unit.attack(self.enemy_start_locations[0]))
@@ -160,7 +162,7 @@ class CheeseBot(sc2.BotAI):
     async def build_barracks(self):
         cc = self.get_command_center()
         if self.can_afford(UnitTypeId.BARRACKS) and self.units(UnitTypeId.SUPPLYDEPOT).ready.amount > 0:
-            await self.build(UnitTypeId.BARRACKS, near=cc.position.towards(self.game_info.map_center, 4))
+            await self.build(UnitTypeId.BARRACKS, near=cc.position.towards(self.game_info.map_center, 6))
             return True
 
     async def build_workers(self):

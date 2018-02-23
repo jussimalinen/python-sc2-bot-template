@@ -191,9 +191,9 @@ class CheeseBot(sc2.BotAI):
             return not await self.do(cc.train(UnitTypeId.ORBITALCOMMAND))
 
     async def build_ghost(self):
-        barracks = self.units(UnitTypeId.BARRACKS)[0]
-        if self.can_afford(UnitTypeId.GHOST) and self.units(UnitTypeId.GHOSTACADEMY).ready.amount > 0 and self.supply_left > 1:
-            return not await self.do(barracks.train(UnitTypeId.GHOST))
+        barracks = self.units(UnitTypeId.BARRACKS)
+        if barracks.exists and self.can_afford(UnitTypeId.GHOST) and self.units(UnitTypeId.GHOSTACADEMY).ready.amount > 0 and self.supply_left > 1:
+            return not await self.do(barracks[0].train(UnitTypeId.GHOST))
 
     async def build_factory(self):
         cc = self.get_command_center()
@@ -215,6 +215,8 @@ class CheeseBot(sc2.BotAI):
             for unit_type in ATTACK_UNIT_TYPES:
                 for unit in self.units(unit_type):
                     await self.do(unit.attack(self.enemy_start_locations[0]))
+                for ghost in self.units(UnitTypeId.GHOST):
+                    await self.do(ghost(AbilityId.BEHAVIOR_CLOAKON))
             return True
 
     async def on_step(self, iteration):

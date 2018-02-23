@@ -29,10 +29,18 @@ class CheeseBot(sc2.BotAI):
             [27, self.attaaaaack],
             [999, self.build_depot]
         ]
-        self.refineries = [];
+        self.refineries = []
+        self.is_attacking = False
+
+    def get_command_center(self):
+        cc = (self.units(UnitTypeId.COMMANDCENTER) | self.units(UnitTypeId.ORBITALCOMMAND))
+        if cc.exists:
+            return cc[0]
+        else:
+            return None
 
     async def build_refinery(self):
-        cc = self.units(UnitTypeId.COMMANDCENTER)[0]
+        cc = self.get_command_center()
         if self.can_afford(UnitTypeId.REFINERY):
             vgs = self.state.vespene_geyser.closer_than(20.0, cc)
             for vg in vgs:
@@ -58,29 +66,60 @@ class CheeseBot(sc2.BotAI):
 
 
     async def build_ghost_academy(self):
-        return
+        cc = self.get_command_center()
+        if self.can_afford(UnitTypeId.GHOSTACADEMY) and self.units(UnitTypeId.BARRACKS).ready.amount > 0:
+            await self.build(UnitTypeId.GHOSTACADEMY, near=cc.position.towards(self.game_info.map_center, 5))
+            return True
 
     async def build_orbital_command(self):
-        return
+        cc = self.get_command_center()
+        if self.can_afford(UnitTypeId.ORBITALCOMMAND):
+            await self.do(cc.train(UnitTypeId.ORBITALCOMMAND))
+            return True
 
     async def build_ghost(self):
-        return
+        barracks = self.units(UnitTypeId.BARRACKS)[0]
+        if self.can_afford(UnitTypeId.GHOST) and self.units(UnitTypeId.GHOSTACADEMY).ready.amount > 0:
+            await self.do(barracks.train(UnitTypeId.GHOST))
+            return True
 
     async def build_factory(self):
-        return
+        cc = self.get_command_center()
+        if self.can_afford(UnitTypeId.FACTORY) and self.units(UnitTypeId.BARRACKS).ready.amount > 0:
+            await self.build(UnitTypeId.FACTORY, near=cc.position.towards(self.game_info.map_center, 5))
+            return True
 
     async def build_factory_reactor(self):
-        return
+        factories = self.units(UnitTypeId.FACTORY).ready
+        if self.can_afford(UnitTypeId.FACTORYREACTOR) and factories.amount > 0:
+            await self.do(factories[0].train(UnitTypeId.FACTORYREACTOR))
+            return True
 
     async def build_cyclone(self):
-        return
+        factories = self.units(UnitTypeId.FACTORY).ready
+        if self.can_afford(UnitTypeId.CYCLONE) and factories.amount > 0:
+            await self.do(factories[0].train(UnitTypeId.CYCLONE))
+            return True
 
     async def attaaaaack(self):
+        for unit in self.units(UnitTypeId.GHOST):
+            await self.do(unit(AbilityId.BEHAVIOR_CLOAKON_GHOST))
+        self.is_attacking = True
         return
 
     async def on_step(self, iteration):
         if iteration == 0:
             await self.chat_send(f"Name: {self.NAME}")
+        cc = self.get_command_center()
+        if not cc or self.is_attacking:
+            target = self.known_enemy_structures.random_or(self.enemy_start_locations[0]).position
+            for unit in self.workers | self.units(UnitTypeId.GHOST) | self.units(UnitTypeId.CYCLONE):
+                await self.do(unit.attack(target))
+            return
+
+        await self.gather_resources()
+        await self.hold_troops()
+
         worker_count = self.workers.amount
         next_step_count = self.STEPS[0][0]
         if worker_count >= next_step_count:
@@ -93,21 +132,36 @@ class CheeseBot(sc2.BotAI):
             await self.build_workers()
 
     async def build_depot(self):
-        cc = self.units(UnitTypeId.COMMANDCENTER)
+        cc = self.get_command_center()
         if self.can_afford(UnitTypeId.SUPPLYDEPOT):
-            await self.build(UnitTypeId.SUPPLYDEPOT, near=cc[-1].position.towards(self.game_info.map_center, 5))
+            await self.build(UnitTypeId.SUPPLYDEPOT, near=cc.position.towards(self.game_info.map_center, 5))
             return True
 
     async def build_barracks(self):
-        cc = self.units(UnitTypeId.COMMANDCENTER)
+        cc = self.get_command_center()
         if self.can_afford(UnitTypeId.BARRACKS) and self.units(UnitTypeId.SUPPLYDEPOT).ready.amount > 0:
-            await self.build(UnitTypeId.BARRACKS, near=cc[-1].position.towards(self.game_info.map_center, 5))
+            await self.build(UnitTypeId.BARRACKS, near=cc.position.towards(self.game_info.map_center, 5))
             return True
 
     async def build_workers(self):
-        for cc in self.units(UnitTypeId.COMMANDCENTER).ready.noqueue:
+        cc = self.get_command_center()
+        if cc.is_ready and cc.noqueue:
             if self.can_afford(UnitTypeId.SCV):
                 print("Building worker, current count {}".format(self.workers.amount))
                 await self.do(cc.train(UnitTypeId.SCV))
                 return True
 
+    async def gather_resources(self):
+        for a in self.units(UnitTypeId.REFINERY):
+            if a.assigned_harvesters < a.ideal_harvesters:
+                w = self.workers.closer_than(20, a)
+                if w.exists:
+                    await self.do(w.random.gather(a))
+
+        cc = self.get_command_center()
+        for scv in self.units(UnitTypeId.SCV).idle:
+            await self.do(scv.gather(self.state.mineral_field.closest_to(cc)))
+
+    async def hold_troops(self):
+        for unit in self.units(UnitTypeId.GHOST) | self.units(UnitTypeId.CYCLONE):
+            await self.do(unit.hold_position())
